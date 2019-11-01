@@ -10,7 +10,7 @@ class Hello {
   static const MethodChannel _channel =
       const MethodChannel('hello');
 
-  static String webApiHost = '192.168.1.12:5000';
+  static String webApiHost = '192.168.0.13:5000';
 
   static Future<String> get platformVersion async {
     final String version = await _channel.invokeMethod('getPlatformVersion');
