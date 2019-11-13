@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-//import 'package:image_picker/image_picker.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as RealImage;
 
 import 'package:hello/hello.dart';
@@ -110,15 +110,13 @@ class _HomeState extends State<Home> {
     }
   }
 
-  void _testImageAnalysis() {
-    /*
+  void _testImageAnalysis() async {
     File image = await ImagePicker.pickImage(source: ImageSource.camera);
-    var data = ImageAnalysis.getDataFromImage(RealImage.decodeImage(image.readAsBytesSync()));
-
+    List<Brick> bricks = await Hello.getImageData(RealImage.decodeImage(image.readAsBytesSync()));
+    Brick firstBrick = bricks.first;
     setState(() {
-      _imageResult = data['data'];
+      _imageResult = "The first brick detected was a ${firstBrick.color} ${firstBrick.height} by ${firstBrick.width} brick";
     });
-    */
   }
 
   @override
