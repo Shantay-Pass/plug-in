@@ -4,14 +4,19 @@ import 'package:flutter/material.dart';
 import 'package:image/image.dart' as Duncan;
 
 class ImageAnalysis {
+  static Duncan.Image debugImage;
+
   static List<Brick> getDataFromImage(Duncan.Image image, LegoColor basePlateColor, int basePlateWidth) {
     const studSpacing = 0.8;   
 
     // Find plate size
     Duncan.Image basePlateImage = _getBasePlate(image);
+    debugImage = basePlateImage;
+    print(basePlateImage.width);
 
     // Derive stud size from plate size
     int actualStudSize = (basePlateImage.width / basePlateWidth * studSpacing).round();
+    print(actualStudSize);
 
     // detect bricks based on stud size
     //List<Brick> bricks = List();
@@ -88,37 +93,65 @@ class ImageAnalysis {
     Map<Point, Stud> _basePlate = Map();
 
     // Initiate plate
-    for(int x = studSize; x <= image.height - studSize; x += studSize) {
-      for(int y = studSize; y <= image.width - studSize; y += studSize) {
+    int halfStudSize = (studSize / 2).round();
+    print(halfStudSize);
+    int pointX = 0;
+    int pointXMax = 0;
+    int pointY = 0;
+    int pointYMax = 0;
+    for(int x = halfStudSize; x <= image.height - halfStudSize; x += studSize) {
+      pointY = 0;
+      for(int y = halfStudSize; y <= image.width - halfStudSize; y += studSize) {
         Color col = Color(image.getPixel(x, y));
         col = Color.fromRGBO(col.blue, col.green, col.red, col.opacity);
 
-        _basePlate[Point(x, y)] = Stud(_colorToLegoColor(col, basePlateColor));
+        pointYMax = pointY > pointYMax ? pointY : pointYMax;
+        Point debug = Point(pointX, pointY++);
+        _basePlate[debug] = Stud(_colorToLegoColor(col, basePlateColor));
       }
+      pointXMax = pointX > pointXMax ? pointX : pointXMax;
+      pointX++;
     }
+    print(_basePlate.length);
+    print(_basePlate.keys.first.toString());
+    print(_basePlate[_basePlate.keys.first]);
+    print(_basePlate[_basePlate.keys.firstWhere((point) {
+      return point.equals(Point(0,0));
+    })]);
 
+    print(pointXMax);
+    print(pointYMax);
     // Check plate for bricks
-    for (int x = 0; x < _basePlate.length; x++) {
-      for (int y = 0; y < _basePlate.length; y++) {
+    for (int x = 0; x < pointXMax; x++) {
+      for (int y = 0; y < pointYMax; y++) {
         Point curPoint = Point(x, y);
+        Stud curStud = _basePlate[_basePlate.keys.firstWhere((point) {
+          return point.equals(curPoint);
+        })];
 
-        if(_basePlate[curPoint].visited)
+        print(curPoint.toString());
+
+        if(curStud.visited)
           // Ignore the current stud since it's already been visited
           continue;
 
-        _basePlate[curPoint].visited = true;
+        curStud.visited = true;
 
-        if(_basePlate[curPoint].color == LegoColor.none)
+        if(curStud.color == LegoColor.none)
           // Ignore the stud since no brick is present here
           continue;
 
         // Create a new brick
-        Brick brick = Brick(_basePlate[curPoint].color);
+        Brick brick = Brick(curStud.color);
 
         // Check the knob below to see if we should increase the height of the brick
-        Point below = Point(x + 1, y);
-        if (_basePlate[below].color == brick.color) {
-          _basePlate[below].visited = true;
+        Point pointBelow = Point(x + 1, y);
+        Stud studBelow = _basePlate[_basePlate.keys.firstWhere((point) {
+          return point.equals(pointBelow);
+        })];
+
+        if (studBelow.color == brick.color) {
+          studBelow.visited = true;
           brick.height++;
         }
 
@@ -126,21 +159,27 @@ class ImageAnalysis {
         bool building = true;
         while(building) {
           int i = 1;
-          Point p = Point(x, y + i);
-          if(_basePlate[p].color == brick.color) {
+          Point pointRight = Point(x, y + i);
+          Stud studRight = _basePlate[_basePlate.keys.firstWhere((point) {
+            return point.equals(pointRight);
+          })];
+          if(studRight.color == brick.color) {
             if(brick.height == 2) {
               // If the brick has a height of 2, check both the neighboaring studs
-              Point p2 = Point(x + 1, y + i);
-              if(_basePlate[p2].color == brick.color) {
+              Point pointDownRight = Point(x + 1, y + i);
+              Stud studDownRight = _basePlate[_basePlate.keys.firstWhere((point) {
+                return point.equals(pointDownRight);
+              })];
+              if(studDownRight.color == brick.color) {
                 brick.width++;
-                _basePlate[p].visited = true;
-                _basePlate[p2].visited = true;
+                studRight.visited = true;
+                studDownRight.visited = true;
               } else {
                 building = false;
               }
             } else {
               brick.width++;
-              _basePlate[p].visited = true;
+              studRight.visited = true;
             }
             i++;
           } else {
@@ -212,6 +251,15 @@ class Point {
 
   int x;
   int y;
+
+  @override
+  String toString() {
+    return ("(" + x.toString() + ", " + y.toString() + ")");
+  }
+
+  bool equals(Point other) {
+    return other.x == x && other.y == y;
+  }
 }
 
 class Stud {

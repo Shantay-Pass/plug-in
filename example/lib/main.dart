@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hello_example/debug.dart';
 
 import 'settings.dart';
 import 'home.dart';
@@ -31,6 +32,7 @@ class StartState extends State<Start> {
   final List<Widget> _children = [
     Home(),
     Settings(),
+    Debug()
   ];
 
   void onTabTapped(int index) {

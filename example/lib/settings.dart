@@ -15,7 +15,7 @@ class _SettingsState extends State<Settings> {
   LegoColor _colorField = Hello.basePlateColor;
   int _widthField = Hello.basePlateWidth;
 
-  List<DropdownMenuItem<LegoColor>> items = [DropdownMenuItem(child: Text("Grey"), value: LegoColor.none), DropdownMenuItem(child: Text("Green"), value: LegoColor.green), DropdownMenuItem(child: Text("Red"), value: LegoColor.red)];
+  List<DropdownMenuItem<LegoColor>> items = [DropdownMenuItem(child: Text("Grey"), value: LegoColor.none), DropdownMenuItem(child: Text("Red"), value: LegoColor.red), DropdownMenuItem(child: Text("Green"), value: LegoColor.green), DropdownMenuItem(child: Text("Blue"), value: LegoColor.blue)];
 
   void _hostnameFieldChanged(String newHostname) {
     setState(() {

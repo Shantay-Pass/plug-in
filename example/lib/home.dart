@@ -11,8 +11,6 @@ import 'package:hello/hello.dart';
 import 'package:hello/web.dart';
 import 'package:hello/image.dart';
 
-import 'settings.dart';
-
 class Home extends StatefulWidget {
   @override
   _HomeState createState() => _HomeState();
