@@ -12,17 +12,12 @@ class ImageAnalysis {
     // Find plate size
     Duncan.Image basePlateImage = _getBasePlate(image);
     debugImage = basePlateImage;
-    print(basePlateImage.width);
 
-    // Derive stud size from plate size
-    int actualStudSize = (basePlateImage.width / basePlateWidth * studSpacing).round();
-    print(actualStudSize);
+    // Derive stud spacing from plate size
+    int actualStudSpacing = (basePlateImage.width / (basePlateWidth / studSpacing)).round();
 
-    // detect bricks based on stud size
-    //List<Brick> bricks = List();
-    //bricks.add(Brick(LegoColor.cyan));
-    //return bricks;
-    return _detectBricks(basePlateImage, actualStudSize, basePlateColor);
+    // detect bricks
+    return _detectBricks(basePlateImage, actualStudSpacing, basePlateColor);
   }
 
   static Duncan.Image _getBasePlate(Duncan.Image img) {
@@ -94,42 +89,30 @@ class ImageAnalysis {
 
     // Initiate plate
     int halfStudSize = (studSize / 2).round();
-    print(halfStudSize);
     int pointX = 0;
     int pointXMax = 0;
     int pointY = 0;
     int pointYMax = 0;
-    for(int x = halfStudSize; x <= image.height - halfStudSize; x += studSize) {
+    for(int x = halfStudSize; x <= image.height; x += studSize) {
       pointY = 0;
-      for(int y = halfStudSize; y <= image.width - halfStudSize; y += studSize) {
+      for(int y = halfStudSize; y <= image.width; y += studSize) {
         Color col = Color(image.getPixel(x, y));
         col = Color.fromRGBO(col.blue, col.green, col.red, col.opacity);
 
         pointYMax = pointY > pointYMax ? pointY : pointYMax;
-        Point debug = Point(pointX, pointY++);
-        _basePlate[debug] = Stud(_colorToLegoColor(col, basePlateColor));
+        _basePlate[Point(pointX, pointY++)] = Stud(_colorToLegoColor(col, basePlateColor));
       }
       pointXMax = pointX > pointXMax ? pointX : pointXMax;
       pointX++;
     }
-    print(_basePlate.length);
-    print(_basePlate.keys.first.toString());
-    print(_basePlate[_basePlate.keys.first]);
-    print(_basePlate[_basePlate.keys.firstWhere((point) {
-      return point.equals(Point(0,0));
-    })]);
 
-    print(pointXMax);
-    print(pointYMax);
     // Check plate for bricks
-    for (int x = 0; x < pointXMax; x++) {
-      for (int y = 0; y < pointYMax; y++) {
+    for (int y = 0; y <= pointYMax; y++) {
+      for (int x = 0; x <= pointXMax; x++) {
         Point curPoint = Point(x, y);
         Stud curStud = _basePlate[_basePlate.keys.firstWhere((point) {
           return point.equals(curPoint);
         })];
-
-        print(curPoint.toString());
 
         if(curStud.visited)
           // Ignore the current stud since it's already been visited
@@ -157,8 +140,9 @@ class ImageAnalysis {
 
         // Find the width of the brick
         bool building = true;
+        int i = 1;
+
         while(building) {
-          int i = 1;
           Point pointRight = Point(x, y + i);
           Stud studRight = _basePlate[_basePlate.keys.firstWhere((point) {
             return point.equals(pointRight);
@@ -186,7 +170,7 @@ class ImageAnalysis {
             building = false;
           }
         }
-
+        print("Made brick: " + brick.toString());
         _bricks.add(brick);
       }
     }
@@ -207,9 +191,10 @@ class ImageAnalysis {
     if(min > col.red)
       min = col.red;
 
-    return (max - min < 60);
+    return (max - min) < 50;
   }
 
+  // Needs adjusting
   static LegoColor _colorToLegoColor(Color col, LegoColor basePlateColor) {
     int red = col.red;
     int green = col.green;
@@ -241,6 +226,11 @@ class Brick {
   int width = 1;
 
   LegoColor color;
+
+  @override
+  String toString() {
+    return color.toString() + " colored brick of dimensions: (H: " + height.toString() + ", W: " + width.toString() + ")";
+  }
 }
 
 class Point {
