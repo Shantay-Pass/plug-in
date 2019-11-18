@@ -128,7 +128,7 @@ class ImageAnalysis {
         Brick brick = Brick(curStud.color);
 
         // Check the knob below to see if we should increase the height of the brick
-        Point pointBelow = Point(x + 1, y);
+        Point pointBelow = Point(x, y + 1);
         Stud studBelow = _basePlate[_basePlate.keys.firstWhere((point) {
           return point.equals(pointBelow);
         })];
@@ -143,7 +143,7 @@ class ImageAnalysis {
         int i = 1;
 
         while(building) {
-          Point pointRight = Point(x, y + i);
+          Point pointRight = Point(x + i, y);
           Stud studRight = _basePlate[_basePlate.keys.firstWhere((point) {
             return point.equals(pointRight);
           })];
