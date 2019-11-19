@@ -200,18 +200,23 @@ class ImageAnalysis {
     int green = col.green;
     int blue = col.blue;
 
-    if (red > 126 && green < 126 && blue < 126)
-      // red
-      return basePlateColor != LegoColor.red ? LegoColor.red : LegoColor.none;
-    if (red < 126 && green > 126 && blue < 126)
-      // green
-      return basePlateColor != LegoColor.green ? LegoColor.green : LegoColor.none;
-    if (red < 126 && green < 126 && blue > 126)
-      // blue
-      return basePlateColor != LegoColor.blue ? LegoColor.blue : LegoColor.none;
-    if (red > 126 && green > 126 && blue < 126)
+    print("Detected color: (r: " + red.toString() + ", g: " + green.toString() + ", b: " + blue.toString() + ")");
+
+    if ((red > green && red > blue) && green > blue)
       // yellow
       return basePlateColor != LegoColor.yellow ? LegoColor.yellow : LegoColor.none;
+    if ((green > red && green > blue) && green > red)
+      // light green
+      return basePlateColor != LegoColor.light_green ? LegoColor.light_green : LegoColor.none;
+    if (red > green && red < blue)
+      // red
+      return basePlateColor != LegoColor.red ? LegoColor.red : LegoColor.none;
+    if (green > red && green < blue)
+      // green
+      return basePlateColor != LegoColor.green ? LegoColor.green : LegoColor.none;
+    if (blue > red && blue > green)
+      // blue
+      return basePlateColor != LegoColor.blue ? LegoColor.blue : LegoColor.none;
 
     return LegoColor.none;
   }
@@ -267,6 +272,5 @@ enum LegoColor {
   green,
   blue,
   yellow,
-  cyan,
   light_green
 }

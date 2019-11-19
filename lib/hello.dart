@@ -13,8 +13,8 @@ class Hello {
       const MethodChannel('hello');
 
   static String webApiHost = '192.168.0.13:5000';
-  static LegoColor basePlateColor = LegoColor.green;
-  static int basePlateWidth = 50;
+  static LegoColor basePlateColor = LegoColor.blue;
+  static int basePlateWidth = 8;
 
   static Future<String> get platformVersion async {
     final String version = await _channel.invokeMethod('getPlatformVersion');

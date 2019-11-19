@@ -11,24 +11,15 @@ class Settings extends StatefulWidget {
 }
 
 class _SettingsState extends State<Settings> {
-  String _hostNameField = Hello.webApiHost;
   LegoColor _colorField = Hello.basePlateColor;
-  int _widthField = Hello.basePlateWidth;
 
   List<DropdownMenuItem<LegoColor>> items = [DropdownMenuItem(child: Text("Grey"), value: LegoColor.none), DropdownMenuItem(child: Text("Red"), value: LegoColor.red), DropdownMenuItem(child: Text("Green"), value: LegoColor.green), DropdownMenuItem(child: Text("Blue"), value: LegoColor.blue)];
 
   void _hostnameFieldChanged(String newHostname) {
-    setState(() {
-      _hostNameField = newHostname;
-    });
+    Hello.webApiHost = newHostname;
   }
 
-  void _updateHostname() {
-    Hello.webApiHost = _hostNameField;
-    print("Changed host to ${Hello.webApiHost}");
-  }
-
-  void _updateBasePlateColor(LegoColor color) {
+  void _updateBaseplateColor(LegoColor color) {
     Hello.basePlateColor = color;
 
     setState(() {
@@ -36,13 +27,9 @@ class _SettingsState extends State<Settings> {
     });
   }
 
-  void _updateBasePlateWidth(String value) {
+  void _updateBaseplateWidth(String value) {
     int newWidth = int.parse(value);
     Hello.basePlateWidth = newWidth;
-
-    setState(() {
-      _widthField = newWidth;
-    });
   }
 
   @override
@@ -55,28 +42,23 @@ class _SettingsState extends State<Settings> {
           child: Center(
             child: Column(
               children: <Widget>[
-                Text("Mindstorm hostname:"),
                 TextField(
                   onChanged: _hostnameFieldChanged,
                   decoration: InputDecoration(
-                    hintText: _hostNameField,
+                    hintText: "Mindstorm IPv4 address",
                   ),
                 ),
-                FlatButton(
-                  child: Text("Set hostname"),
-                  onPressed: _updateHostname,
-                ),
-                Text("Base plate color:"),
+                Text("Baseplate color:"),
                 DropdownButton(
                   items: items,
-                  onChanged: _updateBasePlateColor,
+                  onChanged: _updateBaseplateColor,
                   value: _colorField,
                 ),
                 TextField(
                   keyboardType: TextInputType.number,
-                  onChanged: _updateBasePlateWidth,
+                  onChanged: _updateBaseplateWidth,
                   decoration: InputDecoration(
-                    hintText: _widthField.toString()
+                    hintText: "Baseplate width (cm)"
                   ),
                 )
               ],
