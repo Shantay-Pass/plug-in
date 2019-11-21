@@ -178,10 +178,10 @@ class ImageAnalysis {
         // Find the width of the brick
         bool building = true;
         int i = 1;
-        print("Building a " + curStud.color.toString() + " colored " + brick.height.toString() + " height brick");
+        //print("Building a " + curStud.color.toString() + " colored " + brick.height.toString() + " height brick");
         while(building) {
           Point pointRight = Point(x + i, y);
-          print("Checking point: " + pointRight.toString());
+          //print("Checking point: " + pointRight.toString());
           Stud studRight = _basePlate[_basePlate.keys.firstWhere((point) {
             return point.equals(pointRight);
           })];
@@ -189,7 +189,7 @@ class ImageAnalysis {
             if(brick.height == 2) {
               // If the brick has a height of 2, check both the neighboaring studs
               Point pointDownRight = Point(x + i, y + 1);
-              print("Checking point: " + pointDownRight.toString());
+              //print("Checking point: " + pointDownRight.toString());
               Stud studDownRight = _basePlate[_basePlate.keys.firstWhere((point) {
                 return point.equals(pointDownRight);
               })];
@@ -239,7 +239,7 @@ class ImageAnalysis {
     int green = col.green;
     int blue = col.blue;
 
-    print("Detected color: (r: " + red.toString() + ", g: " + green.toString() + ", b: " + blue.toString() + ")");
+    //print("Detected color: (r: " + red.toString() + ", g: " + green.toString() + ", b: " + blue.toString() + ")");
 
     if ((red >= green || green >= red) && (red > 126 && green > 126) && (red > blue && green > blue))
       // yellow
