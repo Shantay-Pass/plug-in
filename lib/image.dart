@@ -13,13 +13,13 @@ class ImageAnalysis {
     Duncan.Image basePlateImage = _getBasePlate(image);
     debugImage = basePlateImage;
 
-    if (!_trimCheck(basePlateImage)) {
+    // Derive stud spacing from plate size
+    int actualStudSpacing = (basePlateImage.width / (basePlateWidth / studSpacing)).round();
+
+    if (!_trimCheck(basePlateImage, actualStudSpacing)) {
       print("[WARNING] Trim check failed!");
       return new List();
     }
-
-    // Derive stud spacing from plate size
-    int actualStudSpacing = (basePlateImage.width / (basePlateWidth / studSpacing)).round();
 
     // detect bricks
     return _detectBricks(basePlateImage, actualStudSpacing, basePlateColor);
@@ -88,12 +88,11 @@ class ImageAnalysis {
     return Duncan.trim(image, mode: Duncan.TrimMode.topLeftColor);
   }
 
-  static bool _trimCheck(Duncan.Image image) {
-    print("Performing trim check..");
-    Color topLeft = Color(image.getPixel(1, 1));
-    Color topRight = Color(image.getPixel(image.width - 1, 1));
-    Color bottomLeft = Color(image.getPixel(1, image.height - 1));
-    Color bottomRight = Color(image.getPixel(image.width - 1, image.height - 1));
+  static bool _trimCheck(Duncan.Image image, int studSpacing) {
+    Color topLeft = Color(image.getPixel(studSpacing, studSpacing));
+    Color topRight = Color(image.getPixel(image.width - studSpacing, studSpacing));
+    Color bottomLeft = Color(image.getPixel(studSpacing, image.height - studSpacing));
+    Color bottomRight = Color(image.getPixel(image.width - studSpacing, image.height - studSpacing));
     topLeft = Color.fromRGBO(topLeft.blue, topLeft.green, topLeft.red, topLeft.opacity);
     topRight = Color.fromRGBO(topRight.blue, topRight.green, topRight.red, topRight.opacity);
     bottomLeft = Color.fromRGBO(bottomLeft.blue, bottomLeft.green, bottomLeft.red, bottomLeft.opacity);
@@ -111,6 +110,9 @@ class ImageAnalysis {
   }
 
   static List<Brick> _detectBricks(Duncan.Image image, int studSize, LegoColor basePlateColor) {
+    //print("Stud spacing: " + studSize.toString());
+    //print("Image: (H: " +  image.height.toString() + ", W: " + image.width.toString() + ")");
+    
     List<Brick> _bricks = List();
     Map<Point, Stud> _basePlate = Map();
 
@@ -120,15 +122,21 @@ class ImageAnalysis {
     int pointXMax = 0;
     int pointY = 0;
     int pointYMax = 0;
-    for(int x = halfStudSize; x <= image.height; x += studSize) {
+    for(int x = halfStudSize; x < image.height; x += studSize) {
       pointY = 0;
-      for(int y = halfStudSize; y <= image.width; y += studSize) {
+      for(int y = halfStudSize; y < image.width; y += studSize) {
         Color col = Color(image.getPixel(x, y));
         col = Color.fromRGBO(col.blue, col.green, col.red, col.opacity);
 
         pointYMax = pointY > pointYMax ? pointY : pointYMax;
-        _basePlate[Point(pointX, pointY++)] = Stud(_colorToLegoColor(col, basePlateColor));
+        LegoColor color = _colorToLegoColor(col, basePlateColor);
+        _basePlate[Point(pointX, pointY++)] = Stud(color);
+        //print("Added a " + color.toString() + " colored stud at point (" + x.toString() + ", " + y.toString() + ")");
+        Duncan.drawString(image, Duncan.arial_48, x, y, "(" + pointX.toString() + ", " + (pointY - 1).toString() + ")"); //drawRect(image, x - 4, y - 4, x + 4, y + 4, Duncan.Color.fromRgb(255, 0, 255));
+        //Duncan.drawString(image, Duncan.arial_48, x, y + halfStudSize, "(" + color.toString() + ")");
+        debugImage = image;
       }
+
       pointXMax = pointX > pointXMax ? pointX : pointXMax;
       pointX++;
     }
@@ -151,11 +159,13 @@ class ImageAnalysis {
           // Ignore the stud since no brick is present here
           continue;
 
+        //print("Found brick of color " + curStud.color.toString() + " at point " + curPoint.toString());
         // Create a new brick
         Brick brick = Brick(curStud.color);
 
         // Check the knob below to see if we should increase the height of the brick
         Point pointBelow = Point(x, y + 1);
+        //print("Checking point: " + pointBelow.toString());
         Stud studBelow = _basePlate[_basePlate.keys.firstWhere((point) {
           return point.equals(pointBelow);
         })];
@@ -168,9 +178,10 @@ class ImageAnalysis {
         // Find the width of the brick
         bool building = true;
         int i = 1;
-
+        print("Building a " + curStud.color.toString() + " colored " + brick.height.toString() + " height brick");
         while(building) {
           Point pointRight = Point(x + i, y);
+          print("Checking point: " + pointRight.toString());
           Stud studRight = _basePlate[_basePlate.keys.firstWhere((point) {
             return point.equals(pointRight);
           })];
@@ -178,6 +189,7 @@ class ImageAnalysis {
             if(brick.height == 2) {
               // If the brick has a height of 2, check both the neighboaring studs
               Point pointDownRight = Point(x + 1, y + i);
+              print("Checking point: " + pointDownRight.toString());
               Stud studDownRight = _basePlate[_basePlate.keys.firstWhere((point) {
                 return point.equals(pointDownRight);
               })];
@@ -227,18 +239,18 @@ class ImageAnalysis {
     int green = col.green;
     int blue = col.blue;
 
-    //print("Detected color: (r: " + red.toString() + ", g: " + green.toString() + ", b: " + blue.toString() + ")");
+    print("Detected color: (r: " + red.toString() + ", g: " + green.toString() + ", b: " + blue.toString() + ")");
 
-    if ((red > green && red > blue) && green > blue)
+    if ((red >= green || green >= red) && (red > 126 && green > 126) && (red > blue && green > blue))
       // yellow
       return basePlateColor != LegoColor.yellow ? LegoColor.yellow : LegoColor.none;
-    if ((green > red && green > blue) && green > red)
+    if ((green > red && green > blue) && (green > 126) && red + blue >= 100)
       // light green
       return basePlateColor != LegoColor.light_green ? LegoColor.light_green : LegoColor.none;
-    if (red > green && red < blue)
+    if (red > green && red > blue)
       // red
       return basePlateColor != LegoColor.red ? LegoColor.red : LegoColor.none;
-    if (green > red && green < blue)
+    if (green > red && green > blue)
       // green
       return basePlateColor != LegoColor.green ? LegoColor.green : LegoColor.none;
     if (blue > red && blue > green)
