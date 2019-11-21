@@ -188,7 +188,7 @@ class ImageAnalysis {
           if(studRight.color == brick.color) {
             if(brick.height == 2) {
               // If the brick has a height of 2, check both the neighboaring studs
-              Point pointDownRight = Point(x + 1, y + i);
+              Point pointDownRight = Point(x + i, y + 1);
               print("Checking point: " + pointDownRight.toString());
               Stud studDownRight = _basePlate[_basePlate.keys.firstWhere((point) {
                 return point.equals(pointDownRight);
