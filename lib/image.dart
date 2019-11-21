@@ -13,6 +13,11 @@ class ImageAnalysis {
     Duncan.Image basePlateImage = _getBasePlate(image);
     debugImage = basePlateImage;
 
+    if (!_trimCheck(basePlateImage)) {
+      print("[WARNING] Trim check failed!");
+      return new List();
+    }
+
     // Derive stud spacing from plate size
     int actualStudSpacing = (basePlateImage.width / (basePlateWidth / studSpacing)).round();
 
@@ -81,6 +86,28 @@ class ImageAnalysis {
       }
     }
     return Duncan.trim(image, mode: Duncan.TrimMode.topLeftColor);
+  }
+
+  static bool _trimCheck(Duncan.Image image) {
+    print("Performing trim check..");
+    Color topLeft = Color(image.getPixel(1, 1));
+    Color topRight = Color(image.getPixel(image.width - 1, 1));
+    Color bottomLeft = Color(image.getPixel(1, image.height - 1));
+    Color bottomRight = Color(image.getPixel(image.width - 1, image.height - 1));
+    topLeft = Color.fromRGBO(topLeft.blue, topLeft.green, topLeft.red, topLeft.opacity);
+    topRight = Color.fromRGBO(topRight.blue, topRight.green, topRight.red, topRight.opacity);
+    bottomLeft = Color.fromRGBO(bottomLeft.blue, bottomLeft.green, bottomLeft.red, bottomLeft.opacity);
+    bottomRight = Color.fromRGBO(bottomRight.blue, bottomRight.green, bottomRight.red, bottomRight.opacity);
+
+    return
+      !_isNonColor(topLeft) &&
+      !_isNonColor(topRight) &&
+      !_isNonColor(bottomLeft) &&
+      !_isNonColor(bottomRight);
+  }
+
+  static bool _isNonColor(Color col) {
+    return col.red == 255 && col.green == 255 && col.blue == 255;
   }
 
   static List<Brick> _detectBricks(Duncan.Image image, int studSize, LegoColor basePlateColor) {
@@ -200,7 +227,7 @@ class ImageAnalysis {
     int green = col.green;
     int blue = col.blue;
 
-    print("Detected color: (r: " + red.toString() + ", g: " + green.toString() + ", b: " + blue.toString() + ")");
+    //print("Detected color: (r: " + red.toString() + ", g: " + green.toString() + ", b: " + blue.toString() + ")");
 
     if ((red > green && red > blue) && green > blue)
       // yellow

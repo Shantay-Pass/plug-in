@@ -43,6 +43,8 @@ class _HomeState extends State<Home> {
         status = "Unknown";
       }
 
+      if (!mounted) return;
+
       setState(() {
         _serverStatus = status == "Unknown" ? "Host unavailable" : _serverStatus;
         _robotStatus = status;
@@ -111,6 +113,10 @@ class _HomeState extends State<Home> {
   void _testImageAnalysis() async {
     File image = await ImagePicker.pickImage(source: ImageSource.camera);
     List<Brick> bricks = await Hello.getImageData(RealImage.decodeImage(image.readAsBytesSync()));
+    
+    if (!mounted || bricks.length == 0)
+      return;
+    
     Brick firstBrick = bricks.first;
     setState(() {
       _imageResult = "The first brick detected was a ${firstBrick.color} ${firstBrick.height} by ${firstBrick.width} brick";
