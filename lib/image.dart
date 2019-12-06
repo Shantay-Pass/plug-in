@@ -33,7 +33,7 @@ class ImageAnalysis {
     int qX = -1;
     
     for (int x = 0; x < image.width; x++) {
-      Color col = Color(image.getPixel(x, 5));
+      Color col = Color(image.getPixel(x, 10));
       col = Color.fromRGBO(col.blue, col.green, col.red, col.opacity);
       
       if(col.red != 255 && col.green != 255 && col.blue != 255) {
@@ -43,32 +43,33 @@ class ImageAnalysis {
     }
 
     for (int y = 0; y < image.height; y++) {
-      Color col = Color(image.getPixel(5, y));
+      Color col = Color(image.getPixel(10, y));
       col = Color.fromRGBO(col.blue, col.green, col.red, col.opacity);
 
       if(col.red != 255 && col.green != 255 && col.blue != 255) {
         qY = y;
-        qX = 5;
+        qX = 10;
         break;
       }
     }
 
     for (int y = 0; y < image.height; y++) {
-      Color col = Color(image.getPixel(image.width - 3, y));
+      Color col = Color(image.getPixel(image.width - 10, y));
       col = Color.fromRGBO(col.blue, col.green, col.red, col.opacity);
 
       if(col.red != 255 && col.green != 255 && col.blue != 255) {
         if(y < qY) {
           qY = y;
-          qX = image.width - 5;
+          qX = image.width - 10;
           break;
         }
       }
     }
-    
-    num a = atan((qY - 5) / (qX - pX)) * 180/pi;
 
-    Duncan.Image rotatedImage = Duncan.copyRotate(image, -a);
+    if (qX == -1 || qY == -1 || pX == -1)
+      print("[WARNING] Error finding rotation!");
+
+    Duncan.Image rotatedImage = Duncan.copyRotate(image, -(atan((qY - 10) / (qX - pX)) * 180/pi));
     Duncan.Image newImage = Duncan.Image(image.height, image.width, channels: Duncan.Channels.rgba);
     newImage.fill(Duncan.Color.fromRgba(255, 255, 255, 255));
 
@@ -110,9 +111,6 @@ class ImageAnalysis {
   }
 
   static List<Brick> _detectBricks(Duncan.Image image, int studSize, LegoColor basePlateColor) {
-    //print("Stud spacing: " + studSize.toString());
-    //print("Image: (H: " +  image.height.toString() + ", W: " + image.width.toString() + ")");
-    
     List<Brick> _bricks = List();
     Map<Point, Stud> _basePlate = Map();
 
@@ -131,10 +129,6 @@ class ImageAnalysis {
         pointYMax = pointY > pointYMax ? pointY : pointYMax;
         LegoColor color = _colorToLegoColor(col, basePlateColor);
         _basePlate[Point(pointX, pointY++)] = Stud(color);
-        //print("Added a " + color.toString() + " colored stud at point (" + x.toString() + ", " + y.toString() + ")");
-        Duncan.drawString(image, Duncan.arial_48, x, y, "(" + pointX.toString() + ", " + (pointY - 1).toString() + ")"); //drawRect(image, x - 4, y - 4, x + 4, y + 4, Duncan.Color.fromRgb(255, 0, 255));
-        //Duncan.drawString(image, Duncan.arial_48, x, y + halfStudSize, "(" + color.toString() + ")");
-        debugImage = image;
       }
 
       pointXMax = pointX > pointXMax ? pointX : pointXMax;
@@ -159,13 +153,11 @@ class ImageAnalysis {
           // Ignore the stud since no brick is present here
           continue;
 
-        //print("Found brick of color " + curStud.color.toString() + " at point " + curPoint.toString());
         // Create a new brick
         Brick brick = Brick(curStud.color);
 
         // Check the knob below to see if we should increase the height of the brick
         Point pointBelow = Point(x, y + 1);
-        //print("Checking point: " + pointBelow.toString());
         Stud studBelow = _basePlate[_basePlate.keys.firstWhere((point) {
           return point.equals(pointBelow);
         })];
@@ -178,10 +170,9 @@ class ImageAnalysis {
         // Find the width of the brick
         bool building = true;
         int i = 1;
-        //print("Building a " + curStud.color.toString() + " colored " + brick.height.toString() + " height brick");
+       
         while(building) {
           Point pointRight = Point(x + i, y);
-          //print("Checking point: " + pointRight.toString());
           Stud studRight = _basePlate[_basePlate.keys.firstWhere((point) {
             return point.equals(pointRight);
           })];
@@ -189,7 +180,6 @@ class ImageAnalysis {
             if(brick.height == 2) {
               // If the brick has a height of 2, check both the neighboaring studs
               Point pointDownRight = Point(x + i, y + 1);
-              //print("Checking point: " + pointDownRight.toString());
               Stud studDownRight = _basePlate[_basePlate.keys.firstWhere((point) {
                 return point.equals(pointDownRight);
               })];
@@ -230,7 +220,7 @@ class ImageAnalysis {
     if(min > col.red)
       min = col.red;
 
-    return (max - min) < 50;
+    return (max - min) < 35;
   }
 
   // Needs adjusting
@@ -238,8 +228,6 @@ class ImageAnalysis {
     int red = col.red;
     int green = col.green;
     int blue = col.blue;
-
-    //print("Detected color: (r: " + red.toString() + ", g: " + green.toString() + ", b: " + blue.toString() + ")");
 
     if ((red >= green || green >= red) && (red > 126 && green > 126) && (red > blue && green > blue))
       // yellow
